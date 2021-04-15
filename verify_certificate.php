@@ -27,7 +27,7 @@
 require_once('../../config.php');
 
 $contextid = optional_param('contextid', context_system::instance()->id, PARAM_INT);
-$code = optional_param('code', '', PARAM_ALPHANUM); // The code for the certificate we are verifying.
+$code = optional_param('code', '', PARAM_ALPHANUMEXT); // The code for the certificate we are verifying.
 $qrcode = optional_param('qrcode', false, PARAM_BOOL);
 
 $context = context::instance_by_id($contextid);
@@ -88,13 +88,32 @@ if ($checkallofsite) {
 // The form we are using to verify these codes.
 $form = new \mod_customcert\verify_certificate_form($pageurl);
 
+$issimplecertificate = false;
+$simplecertificate = null;
+
+// Verificacao do código do simple certificate.
 if ($code) {
+    $sql = "SELECT
+	            i.id, i.code, i.timecreated, i.coursename, u.firstname, u.lastname, u.email
+            FROM {simplecertificate_issues} i
+            INNER JOIN {simplecertificate} c ON c.id = i.certificateid
+            INNER JOIN {user} u ON u.id = i.userid
+            WHERE i.code = :code";
+
+    $simplecertificate = $DB->get_record_sql($sql, ['code' => $code]);
+
+    if ($simplecertificate) {
+        $issimplecertificate = true;
+    }
+}
+
+if ($code && !$issimplecertificate) {
     $result = new stdClass();
     $result->issues = array();
 
     // Ok, now check if the code is valid.
     $userfields = get_all_user_name_fields(true, 'u');
-    $sql = "SELECT ci.id, u.id as userid, $userfields, co.id as courseid,
+    $sql = "SELECT ci.id, ci.code, ci.timecreated, u.id as userid, u.email, $userfields, co.id as courseid,
                    co.fullname as coursefullname, c.id as certificateid,
                    c.name as certificatename, c.verifyany
               FROM {customcert} c
@@ -133,9 +152,17 @@ echo $OUTPUT->heading($heading);
 if (!$qrcode) {
     echo $form->display();
 }
-if (isset($result)) {
-    $renderer = $PAGE->get_renderer('mod_customcert');
+
+$renderer = $PAGE->get_renderer('mod_customcert');
+
+if ($issimplecertificate) {
+    $result = new \mod_customcert\output\verify_simplecertificate($simplecertificate);
+
+    echo $renderer->render($result);
+} else if (isset($result)) {
     $result = new \mod_customcert\output\verify_certificate_results($result);
+
     echo $renderer->render($result);
 }
+
 echo $OUTPUT->footer();

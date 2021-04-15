@@ -51,6 +51,20 @@ class renderer extends plugin_renderer_base {
     }
 
     /**
+     * Renders the verify simple certificate.
+     *
+     * Defer to template.
+     *
+     * @param \mod_customcert\output\verify_simplecertificate $page
+     * @return string html for the page
+     */
+    public function render_verify_simplecertificate(verify_simplecertificate $page) {
+        $data = $page->export_for_template($this);
+
+        return parent::render_from_template('mod_customcert/verify_simplecertificate', $data);
+    }
+
+    /**
      * Formats the email used to send the certificate by the email_certificate_task.
      *
      * @param email_certificate $certificate The certificate to email

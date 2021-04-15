@@ -44,7 +44,7 @@ class verify_certificate_form extends \moodleform {
         $mform =& $this->_form;
 
         $mform->addElement('text', 'code', get_string('code', 'customcert'));
-        $mform->setType('code', PARAM_ALPHANUM);
+        $mform->setType('code', PARAM_ALPHANUMEXT);
 
         $mform->addElement('submit', 'verify', get_string('verify', 'customcert'));
     }

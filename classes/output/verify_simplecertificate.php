@@ -36,12 +36,7 @@ use templatable;
  * @copyright 2017 Mark Nelson <markn@moodle.com>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class verify_certificate_result implements templatable, renderable {
-
-    /**
-     * @var string The URL to the user's profile.
-     */
-    public $userprofileurl;
+class verify_simplecertificate implements templatable, renderable {
 
     /**
      * @var string The user's fullname.
@@ -49,19 +44,9 @@ class verify_certificate_result implements templatable, renderable {
     public $userfullname;
 
     /**
-     * @var string The URL to the course page.
-     */
-    public $courseurl;
-
-    /**
      * @var string The course's fullname.
      */
     public $coursefullname;
-
-    /**
-     * @var string The certificate's name.
-     */
-    public $certificatename;
 
     /**
      * @var string The certificate's issue code.
@@ -81,21 +66,14 @@ class verify_certificate_result implements templatable, renderable {
     /**
      * Constructor.
      *
-     * @param \stdClass $result
+     * @param \stdClass $certificate
      */
-    public function __construct($result) {
-        $cm = get_coursemodule_from_instance('customcert', $result->certificateid);
-        $context = \context_module::instance($cm->id);
-
-        $this->userprofileurl = new \moodle_url('/user/view.php', array('id' => $result->userid,
-            'course' => $result->courseid));
-        $this->userfullname = fullname($result);
-        $this->courseurl = new \moodle_url('/course/view.php', array('id' => $result->courseid));
-        $this->coursefullname = format_string($result->coursefullname, true, ['context' => $context]);
-        $this->certificatename = format_string($result->certificatename, true, ['context' => $context]);
-        $this->code = $result->code;
-        $this->timecreated = userdate($result->timecreated);
-        $this->email = $result->email;
+    public function __construct($certificate) {
+        $this->userfullname = $certificate->firstname . ' ' . $certificate->lastname;
+        $this->email = $certificate->email;
+        $this->coursefullname = $certificate->coursename;
+        $this->code = $certificate->code;
+        $this->timecreated = userdate($certificate->timecreated);
     }
 
     /**
@@ -106,14 +84,11 @@ class verify_certificate_result implements templatable, renderable {
      */
     public function export_for_template(\renderer_base $output) {
         $result = new \stdClass();
-        $result->userprofileurl = $this->userprofileurl;
         $result->userfullname = $this->userfullname;
+        $result->email = $this->email;
         $result->coursefullname = $this->coursefullname;
-        $result->courseurl = $this->courseurl;
-        $result->certificatename = $this->certificatename;
         $result->code = $this->code;
         $result->timecreated = $this->timecreated;
-        $result->email = $this->email;
 
         return $result;
     }
